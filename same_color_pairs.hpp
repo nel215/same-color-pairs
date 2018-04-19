@@ -110,7 +110,7 @@ class RowSolver {
           stack<char> st;
           st.push(row[i]);
           int alreadyRemoved = 0;
-          uint32_t nextHash = s.hash;
+          uint32_t nextHash = s.hash ^ hashSeed[i];
           for (int j=i+1; j < n; j++) {
             if (removed[j]) {
               alreadyRemoved++;
