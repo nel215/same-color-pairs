@@ -70,66 +70,69 @@ class SameColorPairs {
     }
   };
   void solveRow(const string &row) {
+    double start = get_time();
     const int n = row.size();
     const int m = n / 2;
-    cerr << row << endl;
     vector<priority_queue<State> > queue(m, priority_queue<State>());
     vector<vector<State> > history(m, vector<State>());
     queue[0].push(State());
-    for (int k=0; k < m-1; k++) {
-      if (queue[k].empty()) {
-        continue;
-      }
-      vector<char> removed(n, 0);  // TODO: speedup
-      State s = queue[k].top();
-      cerr << "s: " << s.removed << endl;
-      int idx = k;
-      while (idx > 0) {
-        cerr << s.from << " " << s.to << endl;
-        for (int i=s.from; i < s.to; i++) {
-          removed[i] = 1;
-        }
-        idx--;
-        s = history[idx][s.prev];
-      }
-      s = queue[k].top();
-      queue[k].pop();
-      int prev = history[k].size();
-      history[k].push_back(s);
-      for (int i=0; i < n-1; i++) {
-        if (removed[i]) {
+    while (get_time()-start < 0.1) {
+      for (int k=0; k < m-1; k++) {
+        if (queue[k].empty()) {
           continue;
         }
-        stack<char> st;
-        st.push(row[i]);
-        int to = i;
-        int alreadyRemoved = 0;
-        int tmpRemoved = 0;
-        for (int j=i+1; j < n; j++) {
-          if (removed[j]) {
-            tmpRemoved++;
+        vector<char> removed(n, 0);  // TODO: speedup
+        State s = queue[k].top();
+        cerr << "k: " << k << ", s: " << s.removed << ", n: " << n << endl;
+        int idx = k;
+        while (idx > 0) {
+          // cerr << s.from << " " << s.to << endl;
+          for (int i=s.from; i < s.to; i++) {
+            removed[i] = 1;
+          }
+          idx--;
+          s = history[idx][s.prev];
+        }
+        s = queue[k].top();
+        queue[k].pop();
+        int prev = history[k].size();
+        history[k].push_back(s);
+        for (int i=0; i < n-1; i++) {
+          if (removed[i]) {
             continue;
           }
-          if ((!st.empty()) && st.top() == row[j]) {
-            st.pop();
-          } else {
-            st.push(row[j]);
+          stack<char> st;
+          st.push(row[i]);
+          int to = i;
+          int alreadyRemoved = 0;
+          int tmpRemoved = 0;
+          for (int j=i+1; j < n; j++) {
+            if (removed[j]) {
+              tmpRemoved++;
+              continue;
+            }
+            if ((!st.empty()) && st.top() == row[j]) {
+              st.pop();
+            } else {
+              st.push(row[j]);
+            }
+            if (st.empty()) {
+              to = j+1;
+              alreadyRemoved = tmpRemoved;
+            }
           }
-          if (st.empty()) {
-            to = j+1;
-            alreadyRemoved = tmpRemoved;
+          if (to > i) {
+            State next;
+            next.removed = s.removed - alreadyRemoved + (to - i);
+            next.prev = prev;
+            next.from = i;
+            next.to = to;
+            queue[k+1].push(next);
           }
-        }
-        if (to > i) {
-          State next;
-          next.removed = s.removed - alreadyRemoved + (to - i);
-          next.prev = prev;
-          next.from = i;
-          next.to = to;
-          queue[k+1].push(next);
         }
       }
     }
+    cerr << row << endl;
   }
   vector<string> removePairs(vector<string> board) {
     init(board);
