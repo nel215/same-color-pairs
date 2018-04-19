@@ -78,7 +78,7 @@ class RowSolver {
     const int n = row.size();
     const int m = n / 2;
     vector<priority_queue<State> > queue(m, priority_queue<State>());
-    vector<vector<State> > history(m, vector<State>());
+    vector<State> history;
     set<uint32_t> searched;
     queue[0].push(State());
     while (get_time()-start < 0.1) {
@@ -90,19 +90,20 @@ class RowSolver {
         vector<char> removed(n, 0);  // TODO: speedup
         State s = queue[k].top();
         cerr << "k: " << k << ", s: " << s.removed << ", n: " << n << endl;
-        int idx = k;
-        while (idx > 0) {
+        string d = row;
+        while (s.prev >= 0) {
           // cerr << s.from << " " << s.to << endl;
           for (int i=s.from; i < s.to; i++) {
             removed[i] = 1;
+            d[i] = '.';
           }
-          idx--;
-          s = history[idx][s.prev];
+          s = history[s.prev];
         }
+        cerr << d << endl;
         s = queue[k].top();
         queue[k].pop();
-        int prev = history[k].size();
-        history[k].push_back(s);
+        int prev = history.size();
+        history.push_back(s);
         for (int i=0; i < n-1; i++) {
           if (removed[i]) {
             continue;
@@ -137,6 +138,24 @@ class RowSolver {
           }
         }
       }
+    }
+    auto sortedHistory = history;
+    sort(sortedHistory.begin(), sortedHistory.end());
+    for (int i=0; i < 10; i++) {
+      int j = sortedHistory.size();
+      j = j - 1 - i;
+      auto s = sortedHistory[j];
+      cerr << "s: " << s.removed << ", n: " << n << ", h:" << s.hash << endl;
+      string d = row;
+      while (s.prev >= 0) {
+        // cerr << s.from << " " << s.to << endl;
+        for (int i=s.from; i < s.to; i++) {
+          d[i] = '.';
+        }
+        s = history[s.prev];
+        cerr << "s: " << s.removed << ", h:" << s.hash << endl;
+      }
+      cerr << d << endl;
     }
     cerr << row << endl;
   }
