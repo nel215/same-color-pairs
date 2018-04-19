@@ -10,6 +10,7 @@
 #include <queue>
 #include <stack>
 #include <string>
+#include <memory>
 
 using namespace std;
 
@@ -24,20 +25,7 @@ inline double get_time() {
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
-class SameColorPairs {
-  int H, W, C;
-
- public:
-  void init(const vector<string> &board) {
-    H = board.size();
-    W = board[0].size();
-    C = 0;
-    for (int y=0; y < H; y++) {
-      for (int x=0; x < W; x++) {
-        C = max(C, board[y][x]-'0'+1);
-      }
-    }
-  }
+class RowSolver {
   struct State {
     int removed;
     int prev;
@@ -53,7 +41,8 @@ class SameColorPairs {
       return removed < s.removed;
     }
   };
-  void solveRow(const string &row) {
+ public:
+  void solve(const string &row) {
     double start = get_time();
     const int n = row.size();
     const int m = n / 2;
@@ -118,11 +107,31 @@ class SameColorPairs {
     }
     cerr << row << endl;
   }
+};
+
+class SameColorPairs {
+  int H, W, C;
+  unique_ptr<RowSolver> rowSolver;
+
+ public:
+  void init(const vector<string> &board) {
+    H = board.size();
+    W = board[0].size();
+    C = 0;
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < W; x++) {
+        C = max(C, board[y][x]-'0'+1);
+      }
+    }
+    rowSolver = unique_ptr<RowSolver>(new RowSolver());
+  }
+
+
   vector<string> removePairs(vector<string> board) {
     init(board);
     vector<string> res;
     for (int y=0; y < H; y++) {
-      solveRow(board[y]);
+      rowSolver->solve(board[y]);
       break;
     }
     return res;
