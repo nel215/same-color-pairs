@@ -79,6 +79,7 @@ class RowSolver {
     const int m = n / 2;
     vector<priority_queue<State> > queue(m, priority_queue<State>());
     vector<vector<State> > history(m, vector<State>());
+    set<uint32_t> searched;
     queue[0].push(State());
     while (get_time()-start < 0.1) {
       for (int k=0; k < m-1; k++) {
@@ -128,7 +129,10 @@ class RowSolver {
               next.from = i;
               next.to = j+1;
               next.hash = nextHash;
-              queue[k+1].push(next);
+              if (searched.count(next.hash) == 0) {
+                searched.insert(next.hash);
+                queue[k+1].push(next);
+              }
             }
           }
         }
