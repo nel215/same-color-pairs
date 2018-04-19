@@ -12,10 +12,15 @@
 using namespace std;
 
 class SameColorPairs {
+  int H, W;
  public:
+  void init(const vector<string> &board) {
+    H = board.size();
+    W = board[0].size();
+  }
   vector<string> removePairs(vector<string> board) {
+    init(board);
     vector<string> ret;
-    int H = board.size(), W = board[0].size();
     // find the first pair of horizontally adjacent tiles and remove them
     for (int i = 0; i < H; ++i)
       for (int j = 1; j < W; ++j)
