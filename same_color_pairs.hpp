@@ -24,22 +24,6 @@ inline double get_time() {
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
-struct Board {
-  int H, W, C;
-  vector<vector<uint64_t> > data;
-  Board(int _H, int _W, int _C) {
-    H = _H;
-    W = _W;
-    C = _C;
-    int size = (H*W/64) + ((H*W)%64 > 0 ? 1 : 0);
-    data.assign(C, vector<uint64_t>(size, 0));
-  }
-  void set(int y, int x, int c) {
-    int idx = y*W+x;
-    data[c][idx>>5] |= 1 << (idx&63);
-  }
-};
-
 class SameColorPairs {
   int H, W, C;
 
