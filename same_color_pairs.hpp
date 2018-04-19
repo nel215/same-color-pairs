@@ -13,6 +13,17 @@
 
 using namespace std;
 
+#ifdef LOCAL
+const double ticks_per_sec = 3200000000;
+#else
+const double ticks_per_sec = 3000000000;
+#endif  // LOCAL
+inline double get_time() {
+    uint32_t lo, hi;
+    asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+    return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
+}
+
 struct Board {
   int H, W, C;
   vector<vector<uint64_t> > data;
