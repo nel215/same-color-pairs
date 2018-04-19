@@ -41,6 +41,7 @@ class RowSolver {
       return removed < s.removed;
     }
   };
+
  public:
   void solve(const string &row) {
     double start = get_time();
