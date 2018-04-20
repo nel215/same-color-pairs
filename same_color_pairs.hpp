@@ -254,6 +254,12 @@ class SameColorPairs {
                   b[action.index][x] = '.';
                 }
               }
+            } else if (action.direction == Vertical) {
+              for (auto &interval : action.action.intervals) {
+                for (int y=interval.from; y < interval.to; y++) {
+                  b[y][action.index] = '.';
+                }
+              }
             }
           }
           s = history[s.prev];
@@ -265,6 +271,7 @@ class SameColorPairs {
         if (q == num_queue-1) {
           continue;
         }
+        // Horizontal
         vector<EntireAction> actions;
         int removed = s.removed;
         for (int y=0; y < H; y++) {
@@ -283,10 +290,33 @@ class SameColorPairs {
           nextState.actions = actions;
           queue[q+1].push(nextState);
         }
+        // Vertical
+        actions.clear();
+        removed = s.removed;
+        for (int x=0; x < W; x++) {
+          string col = "";
+          for (int y=0; y < H; y++) {
+            col += b[y][x];
+          }
+          RowAction act = rowSolver->solve(col);
+          if (act.removed == 0) {
+            continue;
+          }
+          removed += act.removed;
+          actions.push_back(EntireAction(Vertical, x, act));
+        }
+        if (removed > s.removed) {
+          EntireState nextState;
+          nextState.prev = prev;
+          nextState.removed = removed;
+          nextState.actions = actions;
+          queue[q+1].push(nextState);
+        }
         cerr << q << endl;
       }
       break;
     }
+    cerr << H << " " << W << endl;
     vector<string> res;
     return res;
   }
