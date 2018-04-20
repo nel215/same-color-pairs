@@ -46,6 +46,25 @@ class XorShift {
 };
 XorShift rng(215);
 
+struct Interval {
+  // [from, to)
+  uint8_t from;
+  uint8_t to;
+  Interval(uint8_t f, uint8_t t) {
+    from = f;
+    to = t;
+  }
+};
+
+struct RowAction {
+  int removed;
+  vector<Interval> intervals;
+  RowAction(int _removed, vector<Interval> _intervals) {
+    removed = _removed;
+    intervals = _intervals;
+  }
+};
+
 class RowSolver {
   struct State {
     int removed;
@@ -73,7 +92,7 @@ class RowSolver {
       hashSeed[i] = rng.rand();
     }
   }
-  void solve(const string &row) {
+  RowAction solve(const string &row) {
     double start = get_time();
     const int n = row.size();
     const int m = n / 2;
@@ -89,17 +108,13 @@ class RowSolver {
         }
         vector<char> removed(n, 0);  // TODO: speedup
         State s = queue[k].top();
-        cerr << "k: " << k << ", s: " << s.removed << ", n: " << n << endl;
         string d = row;
         while (s.prev >= 0) {
-          // cerr << s.from << " " << s.to << endl;
           for (int i=s.from; i < s.to; i++) {
             removed[i] = 1;
-            d[i] = '.';
           }
           s = history[s.prev];
         }
-        cerr << d << endl;
         s = queue[k].top();
         queue[k].pop();
         int prev = history.size();
@@ -139,25 +154,18 @@ class RowSolver {
         }
       }
     }
+    // TODO: speedup
     auto sortedHistory = history;
     sort(sortedHistory.begin(), sortedHistory.end());
-    for (int i=0; i < 10; i++) {
-      int j = sortedHistory.size();
-      j = j - 1 - i;
-      auto s = sortedHistory[j];
-      cerr << "s: " << s.removed << ", n: " << n << ", h:" << s.hash << endl;
-      string d = row;
-      while (s.prev >= 0) {
-        // cerr << s.from << " " << s.to << endl;
-        for (int i=s.from; i < s.to; i++) {
-          d[i] = '.';
-        }
-        s = history[s.prev];
-        cerr << "s: " << s.removed << ", h:" << s.hash << endl;
-      }
-      cerr << d << endl;
+    auto s = sortedHistory[static_cast<int>(sortedHistory.size()) - 1];
+    int removed = s.removed;
+    vector<Interval> intervals;
+    while (s.prev >= 0) {
+      intervals.push_back(Interval(s.from, s.to));
+      s = history[s.prev];
     }
-    cerr << row << endl;
+    reverse(intervals.begin(), intervals.end());
+    return RowAction(removed, intervals);
   }
 };
 
