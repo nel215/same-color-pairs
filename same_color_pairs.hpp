@@ -198,10 +198,11 @@ struct EntireAction {
 struct EntireState {
   int prev;
   int removed;
-  EntireAction action;
+  vector<EntireAction> actions;
   EntireState() {
     prev = -1;
     removed = 0;
+    actions.clear();
   }
   bool operator<(const EntireState &s)const{
     return removed < s.removed;
@@ -246,10 +247,12 @@ class SameColorPairs {
         EntireState s = queue[q].top();
         while (s.prev >= 0) {
           cerr << s.prev << " " << s.removed << endl;
-          if (s.action.direction == Horizontal) {
-            for (auto &interval : s.action.action.intervals) {
-              for (int x=interval.from; x < interval.to; x++) {
-                b[s.action.index][x] = '.';
+          for (auto &action : s.actions) {
+            if (action.direction == Horizontal) {
+              for (auto &interval : action.action.intervals) {
+                for (int x=interval.from; x < interval.to; x++) {
+                  b[action.index][x] = '.';
+                }
               }
             }
           }
@@ -262,17 +265,22 @@ class SameColorPairs {
         if (q == num_queue-1) {
           continue;
         }
-        cerr << endl;
+        vector<EntireAction> actions;
+        int removed = s.removed;
         for (int y=0; y < H; y++) {
-          if (q > 10) cerr << b[y] << endl;
+          if (q > 0) cerr << b[y] << endl;
           RowAction act = rowSolver->solve(b[y]);
           if (act.removed == 0) {
             continue;
           }
+          removed += act.removed;
+          actions.push_back(EntireAction(Horizontal, y, act));
+        }
+        if (removed > s.removed) {
           EntireState nextState;
           nextState.prev = prev;
-          nextState.removed = s.removed + act.removed;
-          nextState.action = EntireAction(Horizontal, y, act);
+          nextState.removed = removed;
+          nextState.actions = actions;
           queue[q+1].push(nextState);
         }
         cerr << q << endl;
