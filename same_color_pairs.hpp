@@ -46,6 +46,9 @@ class XorShift {
 };
 XorShift rng(215);
 
+const uint8_t Horizontal = 0;
+const uint8_t Vertical = 1;
+
 struct Interval {
   // [from, to)
   uint8_t from;
@@ -59,6 +62,10 @@ struct Interval {
 struct RowAction {
   int removed;
   vector<Interval> intervals;
+  RowAction() {
+    removed = 0;
+    intervals.clear();
+  }
   RowAction(int _removed, vector<Interval> _intervals) {
     removed = _removed;
     intervals = _intervals;
@@ -93,22 +100,28 @@ class RowSolver {
     }
   }
   RowAction solve(const string &row) {
-    double start = get_time();
     const int n = row.size();
     const int m = n / 2;
     vector<priority_queue<State> > queue(m, priority_queue<State>());
     vector<State> history;
     set<uint32_t> searched;
+    vector<char> initialRemoved(n, 0);
+    for (int i=0; i < n; i++) {
+      if (row[i] == '.') {
+        initialRemoved[i] = 1;
+      }
+    }
     queue[0].push(State());
-    while (get_time()-start < 0.1) {
+    for (int loop=0; loop < 20; loop++) {
+      // TODO: the case of k == m-1
       for (int k=0; k < m-1; k++) {
         // skip
         if (queue[k].empty()) {
           continue;
         }
-        vector<char> removed(n, 0);  // TODO: speedup
+        vector<char> removed = initialRemoved;  // TODO: speedup
         State s = queue[k].top();
-        string d = row;
+
         while (s.prev >= 0) {
           for (int i=s.from; i < s.to; i++) {
             removed[i] = 1;
@@ -135,7 +148,7 @@ class RowSolver {
             nextHash = nextHash ^ hashSeed[j];
             if ((!st.empty()) && st.top() == row[j]) {
               st.pop();
-            } else {
+            } else if (row[j] != '.') {
               st.push(row[j]);
             }
             if (st.empty()) {
@@ -169,9 +182,23 @@ class RowSolver {
   }
 };
 
+struct EntireAction {
+  uint8_t direction;
+  uint8_t index;
+  RowAction action;
+  EntireAction() {
+  }
+  EntireAction(uint8_t d, uint8_t i, RowAction a) {
+    direction = d;
+    index = i;
+    action = a;
+  }
+};
+
 struct EntireState {
   int prev;
   int removed;
+  EntireAction action;
   EntireState() {
     prev = -1;
     removed = 0;
@@ -212,17 +239,43 @@ class SameColorPairs {
     queue[0].push(EntireState());
     while (!mustFinish()) {
       for (int q=0; q < num_queue; q++) {
+        auto b = board;
         if (queue[q].empty()) {
           continue;
         }
         EntireState s = queue[q].top();
-        queue[q].pop();
         while (s.prev >= 0) {
+          cerr << s.prev << " " << s.removed << endl;
+          if (s.action.direction == Horizontal) {
+            for (auto &interval : s.action.action.intervals) {
+              for (int x=interval.from; x < interval.to; x++) {
+                b[s.action.index][x] = '.';
+              }
+            }
+          }
           s = history[s.prev];
         }
-        for (int y=0; y < H; y++) {
-          RowAction act = rowSolver->solve(board[y]);
+        s = queue[q].top();
+        queue[q].pop();
+        int prev = history.size();
+        history.push_back(s);
+        if (q == num_queue-1) {
+          continue;
         }
+        cerr << endl;
+        for (int y=0; y < H; y++) {
+          if (q > 10) cerr << b[y] << endl;
+          RowAction act = rowSolver->solve(b[y]);
+          if (act.removed == 0) {
+            continue;
+          }
+          EntireState nextState;
+          nextState.prev = prev;
+          nextState.removed = s.removed + act.removed;
+          nextState.action = EntireAction(Horizontal, y, act);
+          queue[q+1].push(nextState);
+        }
+        cerr << q << endl;
       }
       break;
     }
