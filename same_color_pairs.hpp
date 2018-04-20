@@ -169,12 +169,29 @@ class RowSolver {
   }
 };
 
+struct EntireState {
+  int prev;
+  int removed;
+  EntireState() {
+    prev = -1;
+    removed = 0;
+  }
+  bool operator<(const EntireState &s)const{
+    return removed < s.removed;
+  }
+};
+
 class SameColorPairs {
+  double startTime;
   int H, W, C;
   unique_ptr<RowSolver> rowSolver;
 
- public:
+  inline bool mustFinish() {
+    return get_time() - startTime > 9.5;
+  }
+
   void init(const vector<string> &board) {
+    startTime = get_time();
     H = board.size();
     W = board[0].size();
     C = 0;
@@ -186,14 +203,30 @@ class SameColorPairs {
     rowSolver = unique_ptr<RowSolver>(new RowSolver());
   }
 
-
+ public:
   vector<string> removePairs(vector<string> board) {
     init(board);
-    vector<string> res;
-    for (int y=0; y < H; y++) {
-      rowSolver->solve(board[y]);
+    const int num_queue = H * W / 2;
+    vector<priority_queue<EntireState> > queue(num_queue);
+    vector<EntireState> history;
+    queue[0].push(EntireState());
+    while (!mustFinish()) {
+      for (int q=0; q < num_queue; q++) {
+        if (queue[q].empty()) {
+          continue;
+        }
+        EntireState s = queue[q].top();
+        queue[q].pop();
+        while (s.prev >= 0) {
+          s = history[s.prev];
+        }
+        for (int y=0; y < H; y++) {
+          RowAction act = rowSolver->solve(board[y]);
+        }
+      }
       break;
     }
+    vector<string> res;
     return res;
   }
 };
