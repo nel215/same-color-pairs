@@ -19,7 +19,7 @@ const double ticks_per_sec = 3200000000;
 #else
 const double ticks_per_sec = 3000000000;
 #endif  // LOCAL
-inline double get_time() {
+inline double getTime() {  // TODO: Fix function name
     uint32_t lo, hi;
     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
@@ -215,11 +215,11 @@ class SameColorPairs {
   unique_ptr<RowSolver> rowSolver;
 
   inline bool mustFinish() {
-    return get_time() - startTime > 9.5;
+    return getTime() - startTime > 9.5;
   }
 
   void init(const vector<string> &board) {
-    startTime = get_time();
+    startTime = getTime();
     H = board.size();
     W = board[0].size();
     C = 0;
