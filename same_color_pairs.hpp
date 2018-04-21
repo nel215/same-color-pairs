@@ -44,7 +44,7 @@ struct BIT {
     return res;
   }
   int sum(int ymin, int xmin, int ymax, int xmax) {
-    return sum(ymax, xmax) - sum(ymin-1, xmax) - sum(ymax, xmin-1) + sum(ymin-1, xmin-1);
+    return sum(ymax, xmax) - sum(ymin, xmax) - sum(ymax, xmin) + sum(ymin, xmin);
   }
   void add(int _y, int _x, int v) {
     for (int y=_y+1; y <= H; y+=y&(-y)) {
