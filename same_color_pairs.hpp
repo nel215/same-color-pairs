@@ -11,6 +11,7 @@
 #include <stack>
 #include <string>
 #include <memory>
+#include <utility>
 
 using namespace std;
 
@@ -261,9 +262,7 @@ class SameColorPairs {
     rowSolver = unique_ptr<RowSolver>(new RowSolver());
   }
 
- public:
-  vector<string> removePairs(vector<string> board) {
-    init(board);
+  vector<EntireState> solveStraight(const vector<string> &board) {
     const int num_queue = H * W / 2;
     vector<priority_queue<EntireState> > queue(num_queue);
     vector<EntireState> history;
@@ -346,7 +345,96 @@ class SameColorPairs {
       }
       break;
     }
-    cerr << H << " " << W << endl;
+    return history;
+  }
+
+  void solveDiag(vector<string> board) {
+    vector<BIT> bit(C+1, BIT(H, W));
+    vector<vector<pair<int, int> > > pos(C, vector<pair<int, int> >());
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < W; x++) {
+        if (board[y][x] == '.') {
+          continue;
+        }
+        int c = board[y][x]-'0';
+        bit[c].add(y, x, 1);
+        bit[C].add(y, x, 1);
+        pos[c].push_back(make_pair(y, x));
+      }
+    }
+
+    while (true) {
+      bool updated = false;
+      for (int c=0; c < C; c++) {
+        for (int i=0; i < pos[c].size(); i++) {
+          int iy = pos[c][i].first;
+          int ix = pos[c][i].second;
+          if (board[iy][ix] == '.') {
+            continue;
+          }
+          for (int j=i+1; j < pos[c].size(); j++) {
+            int jy = pos[c][j].first;
+            int jx = pos[c][j].second;
+            if (board[jy][jx] == '.') {
+              continue;
+            }
+
+            int ymax = max(iy, jy)+1;
+            int xmax = max(ix, jx)+1;
+            int ymin = min(iy, jy);
+            int xmin = min(ix, jx);
+            if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
+              board[iy][ix] = '.';
+              board[jy][jx] = '.';
+              bit[c].add(iy, ix, -1);
+              bit[c].add(jy, jx, -1);
+              bit[C].add(iy, ix, -1);
+              bit[C].add(jy, jx, -1);
+              updated = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!updated) {
+        for (int y=0; y < H; y++) {
+          cerr << board[y] << endl;
+        }
+        break;
+      }
+    }
+  }
+
+ public:
+  vector<string> removePairs(vector<string> board) {
+    init(board);
+    auto straightHistory = solveStraight(board);
+    auto sortedStraightHistory = straightHistory;
+    sort(sortedStraightHistory.begin(), sortedStraightHistory.end());
+    auto s = sortedStraightHistory[static_cast<int>(sortedStraightHistory.size())-1];
+    auto b = board;
+    while (s.prev >= 0) {
+      for (auto &action : s.actions) {
+        if (action.direction == Horizontal) {
+          for (auto &interval : action.action.intervals) {
+            for (int x=interval.from; x < interval.to; x++) {
+              b[action.index][x] = '.';
+            }
+          }
+        } else if (action.direction == Vertical) {
+          for (auto &interval : action.action.intervals) {
+            for (int y=interval.from; y < interval.to; y++) {
+              b[y][action.index] = '.';
+            }
+          }
+        }
+      }
+      s = straightHistory[s.prev];
+    }
+
+    solveDiag(b);
+
+    cerr << H << " " << W << " " << C << endl;
     vector<string> res;
     return res;
   }
