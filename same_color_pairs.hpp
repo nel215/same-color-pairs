@@ -398,42 +398,25 @@ class SameColorPairs {
       }
       if (!updated) {
         for (int y=0; y < H; y++) {
-          cerr << board[y] << endl;
+          // cerr << board[y] << endl;
         }
         break;
       }
     }
+
+    double res = 0;
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < H; x++) {
+        if (board[y][x] == '.') res += 1;
+      }
+    }
+    return res / H / W;
   }
 
  public:
   vector<string> removePairs(vector<string> board) {
     init(board);
-    auto straightHistory = solveStraight(board);
-    auto sortedStraightHistory = straightHistory;
-    sort(sortedStraightHistory.begin(), sortedStraightHistory.end());
-    auto s = sortedStraightHistory[static_cast<int>(sortedStraightHistory.size())-1];
-    auto b = board;
-    while (s.prev >= 0) {
-      for (auto &action : s.actions) {
-        if (action.direction == Horizontal) {
-          for (auto &interval : action.action.intervals) {
-            for (int x=interval.from; x < interval.to; x++) {
-              b[action.index][x] = '.';
-            }
-          }
-        } else if (action.direction == Vertical) {
-          for (auto &interval : action.action.intervals) {
-            for (int y=interval.from; y < interval.to; y++) {
-              b[y][action.index] = '.';
-            }
-          }
-        }
-      }
-      s = straightHistory[s.prev];
-    }
-
-    solveDiag(b);
-
+    solveDiag(board);
     cerr << H << " " << W << " " << C << endl;
     vector<string> res;
     return res;
