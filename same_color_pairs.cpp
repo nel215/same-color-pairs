@@ -1,12 +1,21 @@
+#include <cassert>
 #include "same_color_pairs.hpp"
 
-
-template<class T> void getVector(vector<T>& v) {
-  for (int i = 0; i < v.size(); ++i)
-  cin >> v[i];
+void testBIT() {
+  int H = 5;
+  int W = 2;
+  BIT bit(H, W);
+  bit.add(2, 1, 1);
+  assert(bit.sum(2, 1) == 0);
+  assert(bit.sum(2, 2) == 0);
+  assert(bit.sum(3, 1) == 0);
+  assert(bit.sum(3, 2) == 1);
+  assert(bit.sum(2, 1, 2, 1) == 0);
+  assert(bit.sum(2, 1, 3, 2) == 1);
 }
 
 int main() {
+  testBIT();
   SameColorPairs scp;
   int H;
   cin >> H;

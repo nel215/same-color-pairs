@@ -25,6 +25,36 @@ inline double getTime() {  // TODO: Fix function name
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
+struct BIT {
+  int H, W;
+  vector<vector<int> > data;
+
+ public:
+  BIT(int _H, int _W): H(_H), W(_W) {
+    data.assign(H+1, vector<int>(W+1, 0));
+  }
+  // [0, y)-[0, x)
+  int sum(int _y, int _x) {
+    int res = 0;
+    for (int y=_y; y > 0; y-=y&(-y)) {
+      for (int x=_x; x > 0; x-=x&(-x)) {
+        res += data[y][x];
+      }
+    }
+    return res;
+  }
+  int sum(int ymin, int xmin, int ymax, int xmax) {
+    return sum(ymax, xmax) - sum(ymin-1, xmax) - sum(ymax, xmin-1) + sum(ymin-1, xmin-1);
+  }
+  void add(int _y, int _x, int v) {
+    for (int y=_y+1; y <= H; y+=y&(-y)) {
+      for (int x=_x+1; x <= W; x+=x&(-x)) {
+        data[y][x] += v;
+      }
+    }
+  }
+};
+
 class XorShift {
   uint32_t x;
   uint32_t y;
