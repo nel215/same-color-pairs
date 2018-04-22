@@ -26,6 +26,7 @@ inline double getTime() {  // TODO: Fix function name
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
+// TODO: precalculate
 inline uint8_t bitUp(uint8_t x) {
   return x - (x&(-x));
 }
@@ -109,7 +110,7 @@ class SameColorPairs {
 
   double solveDiag(vector<BIT> bit,
                    vector<vector<pair<int, int> > > positions,
-                   vector<string> board) {
+                   const vector<string> &board) {
     vector<int> colors(C);
     for (int c=0; c < C; c++) {
       colors[c] = c;
@@ -117,6 +118,7 @@ class SameColorPairs {
     }
 
     double res = 0;
+    Mask mask(H);
     while (true) {
       bool updated = false;
       random_shuffle(colors.begin(), colors.end());
@@ -128,16 +130,31 @@ start:
           if (i >= pos.size()) break;
           int iy = pos[i].first;
           int ix = pos[i].second;
+          // TODO: guardian
+          bool upok = (iy - 1 >= 0 && (mask.get(iy-1, ix) || board[iy-1][ix] == '0'+c));
+          bool downok = (iy + 1 < H && (mask.get(iy+1, ix) || board[iy+1][ix] == '0'+c));
+          bool leftok = (ix - 1 >= 0 && (mask.get(iy, ix-1) || board[iy][ix-1] == '0'+c));
+          bool rightok = (ix + 1 < W && (mask.get(iy, ix+1) || board[iy][ix+1] == '0'+c));
+
 
           for (int j=i+1; j < pos.size(); j++) {
             int jy = pos[j].first;
             int jx = pos[j].second;
+            if ((!downok && jy > iy) || (!upok && jy < iy)) {
+              continue;
+            }
+            if ((!rightok && jx > ix) || (!leftok && jx < ix)) {
+              continue;
+            }
+
 
             int ymax = max(iy, jy)+1;
             int xmax = max(ix, jx)+1;
             int ymin = min(iy, jy);
             int xmin = min(ix, jx);
             if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
+              mask.set(iy, ix);
+              mask.set(jy, jx);
               swap(pos[j], pos[pos.size()-1]);
               pos.pop_back();
               swap(pos[i], pos[pos.size()-1]);
@@ -146,8 +163,6 @@ start:
               bit[c].add(jy, jx, -1);
               bit[C].add(iy, ix, -1);
               bit[C].add(jy, jx, -1);
-              board[iy][ix] = '.';
-              board[jy][jx] = '.';
               res += 2;
               updated = true;
               goto start;
@@ -171,12 +186,16 @@ start:
   struct Mask {
     vector<uint64_t> data;
     explicit Mask(int H) {
-      data.assign(2*H, 0);
+      data.assign(2*H+2, 0);
     }
     bool get(int y, int x) const {
+      y++;
+      x++;
       return data[2*y+(x>>6)] & (1LL << (x&63));
     }
     void set(int y, int x) {
+      y++;
+      x++;
       data[2*y+(x>>6)] |= (1LL << (x&63));
     }
   };
