@@ -98,52 +98,58 @@ class SameColorPairs {
   }
 
   double solveDiag(vector<BIT> bit,
-                   vector<vector<pair<int, int> > > pos) {
+                   vector<vector<pair<int, int> > > positions,
+                   vector<string> board) {
     vector<int> colors(C);
     for (int c=0; c < C; c++) {
       colors[c] = c;
-      random_shuffle(pos[c].begin(), pos[c].end());
+      random_shuffle(positions[c].begin(), positions[c].end());
     }
 
     double res = 0;
-    Mask mask(H);
     while (true) {
       bool updated = false;
-      for (int c=0; c < C; c++) {
-        for (int i=0; i < pos[c].size(); i++) {
-          int iy = pos[c][i].first;
-          int ix = pos[c][i].second;
-          if (mask.get(iy, ix)) {
-            continue;
-          }
-          for (int j=i+1; j < pos[c].size(); j++) {
-            int jy = pos[c][j].first;
-            int jx = pos[c][j].second;
-            if (mask.get(jy, jx)) {
-              continue;
-            }
+      random_shuffle(colors.begin(), colors.end());
+      for (auto c : colors) {
+        auto &pos = positions[c];
+        // cerr << c << " " << num_pos << endl;
+        for (int i=0;; i++) {
+start:
+          if (i >= pos.size()) break;
+          int iy = pos[i].first;
+          int ix = pos[i].second;
+
+          for (int j=i+1; j < pos.size(); j++) {
+            int jy = pos[j].first;
+            int jx = pos[j].second;
 
             int ymax = max(iy, jy)+1;
             int xmax = max(ix, jx)+1;
             int ymin = min(iy, jy);
             int xmin = min(ix, jx);
             if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
-              mask.set(iy, ix);
-              mask.set(jy, jx);
+              swap(pos[j], pos[pos.size()-1]);
+              pos.pop_back();
+              swap(pos[i], pos[pos.size()-1]);
+              pos.pop_back();
               bit[c].add(iy, ix, -1);
               bit[c].add(jy, jx, -1);
               bit[C].add(iy, ix, -1);
               bit[C].add(jy, jx, -1);
+              board[iy][ix] = '.';
+              board[jy][jx] = '.';
+              res += 2;
               updated = true;
-              break;
+              goto start;
             }
           }
         }
       }
       if (!updated) {
-        for (int y=0; y < H; y++) {
-          // cerr << board[y] << endl;
-        }
+        // for (int y=0; y < H; y++) {
+        //   cerr << board[y] << endl;
+        // }
+        // cerr << endl;
         break;
       }
     }
@@ -183,7 +189,7 @@ class SameColorPairs {
       }
     }
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, pos);
+      double tmp = solveDiag(bit, pos, board);
       // cerr << "s:" << tmp << endl;
       best = min(best, tmp);
       avg += tmp/n;
