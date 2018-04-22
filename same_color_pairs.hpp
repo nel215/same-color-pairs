@@ -102,8 +102,7 @@ class SameColorPairs {
   }
 
   double solveDiag(vector<BIT> bit,
-                   vector<vector<pair<int, int> > > pos,
-                   vector<string> board) {
+                   vector<vector<pair<int, int> > > pos) {
     vector<int> colors(C);
     for (int c=0; c < C; c++) {
       colors[c] = c;
@@ -111,19 +110,20 @@ class SameColorPairs {
     }
 
     double res = 0;
+    Mask mask(H);
     while (true) {
       bool updated = false;
       for (int c=0; c < C; c++) {
         for (int i=0; i < pos[c].size(); i++) {
           int iy = pos[c][i].first;
           int ix = pos[c][i].second;
-          if (board[iy][ix] == '.') {
+          if (mask.get(iy, ix)) {
             continue;
           }
           for (int j=i+1; j < pos[c].size(); j++) {
             int jy = pos[c][j].first;
             int jx = pos[c][j].second;
-            if (board[jy][jx] == '.') {
+            if (mask.get(jy, jx)) {
               continue;
             }
 
@@ -132,8 +132,8 @@ class SameColorPairs {
             int ymin = min(iy, jy);
             int xmin = min(ix, jx);
             if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
-              board[iy][ix] = '.';
-              board[jy][jx] = '.';
+              mask.set(iy, ix);
+              mask.set(jy, jx);
               bit[c].add(iy, ix, -1);
               bit[c].add(jy, jx, -1);
               bit[C].add(iy, ix, -1);
@@ -155,6 +155,19 @@ class SameColorPairs {
     return H * W - res;
   }
 
+  struct Mask {
+    vector<uint64_t> data;
+    explicit Mask(int H) {
+      data.assign(2*H, 0);
+    }
+    bool get(int y, int x) const {
+      return data[2*y+(x>>6)] & (1LL << (x&63));
+    }
+    void set(int y, int x) {
+      data[2*y+(x>>6)] |= (1LL << (x&63));
+    }
+  };
+
  public:
   vector<string> removePairs(vector<string> board) {
     init(board);
@@ -174,7 +187,7 @@ class SameColorPairs {
       }
     }
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, pos, board);
+      double tmp = solveDiag(bit, pos);
       // cerr << "s:" << tmp << endl;
       best = min(best, tmp);
       avg += tmp/n;
