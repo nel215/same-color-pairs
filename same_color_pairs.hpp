@@ -77,10 +77,6 @@ class XorShift {
 };
 XorShift rng(215);
 
-const uint8_t Horizontal = 0;
-const uint8_t Vertical = 1;
-
-
 class SameColorPairs {
   double startTime;
   int H, W, C;
