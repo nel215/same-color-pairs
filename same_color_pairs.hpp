@@ -108,6 +108,7 @@ class SameColorPairs {
     }
   }
 
+  // TODO: make positions to be const
   double solveDiag(vector<BIT> bit,
                    vector<vector<pair<int, int> > > positions,
                    const vector<string> &board) {
