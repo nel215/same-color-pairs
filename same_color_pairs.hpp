@@ -348,8 +348,7 @@ class SameColorPairs {
     return history;
   }
 
-  void solveDiag(vector<string> board) {
-    vector<BIT> bit(C+1, BIT(H, W));
+  double solveDiag(vector<BIT> bit, vector<string> board) {
     vector<vector<pair<int, int> > > pos(C, vector<pair<int, int> >());
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
@@ -357,12 +356,11 @@ class SameColorPairs {
           continue;
         }
         int c = board[y][x]-'0';
-        bit[c].add(y, x, 1);
-        bit[C].add(y, x, 1);
         pos[c].push_back(make_pair(y, x));
       }
     }
 
+    double res = 0;
     while (true) {
       bool updated = false;
       for (int c=0; c < C; c++) {
@@ -404,20 +402,33 @@ class SameColorPairs {
       }
     }
 
-    double res = 0;
-    for (int y=0; y < H; y++) {
-      for (int x=0; x < H; x++) {
-        if (board[y][x] == '.') res += 1;
-      }
-    }
-    return res / H / W;
+    return H * W - res;
   }
 
  public:
   vector<string> removePairs(vector<string> board) {
     init(board);
-    solveDiag(board);
-    cerr << H << " " << W << " " << C << endl;
+    double best = H*W;
+    double avg = 0;
+    // int n = 10;
+    int n = 1000000*10*10/H/W/C*10/H*10/W;
+    cerr << n << endl;
+    vector<BIT> bit(C+1, BIT(H, W));
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < W; x++) {
+        int c = board[y][x]-'0';
+        bit[c].add(y, x, 1);
+        bit[C].add(y, x, 1);
+      }
+    }
+    for (int i=0; i < n; i++) {
+      double tmp = solveDiag(bit, board);
+      // cerr << "s:" << tmp << endl;
+      best = min(best, tmp);
+      avg += tmp/n;
+    }
+    cerr << "best: " <<  best << " avg: " << avg << endl;
+    // cerr << H << " " << W << " " << C << endl;
     vector<string> res;
     return res;
   }
