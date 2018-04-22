@@ -275,7 +275,6 @@ class SameColorPairs {
         }
         EntireState s = queue[q].top();
         while (s.prev >= 0) {
-          cerr << s.prev << " " << s.removed << endl;
           for (auto &action : s.actions) {
             if (action.direction == Horizontal) {
               for (auto &interval : action.action.intervals) {
@@ -304,7 +303,6 @@ class SameColorPairs {
         vector<EntireAction> actions;
         int removed = s.removed;
         for (int y=0; y < H; y++) {
-          if (q > 0) cerr << b[y] << endl;
           RowAction act = rowSolver->solve(b[y]);
           if (act.removed == 0) {
             continue;
@@ -341,7 +339,6 @@ class SameColorPairs {
           nextState.actions = actions;
           queue[q+1].push(nextState);
         }
-        cerr << q << endl;
       }
       break;
     }
