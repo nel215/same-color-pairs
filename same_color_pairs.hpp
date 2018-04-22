@@ -32,12 +32,12 @@ inline uint8_t bitUp(uint8_t x) {
 }
 
 struct BIT {
-  int H, W;
-  vector<vector<uint16_t> > data;
+  uint8_t H, W;
+  vector<vector<int> > data;
 
  public:
-  BIT(int _H, int _W): H(_H), W(_W) {
-    data.assign(H+1, vector<uint16_t>(W+1, 0));
+  BIT(uint8_t _H, uint8_t _W): H(_H), W(_W) {
+    data.assign(H+1, vector<int>(W+1, 0));
   }
   // [0, y)-[0, x)
   int sum(uint8_t _y, uint8_t _x) const {
@@ -58,9 +58,9 @@ struct BIT {
   int sum(uint8_t ymin, uint8_t xmin, uint8_t ymax, uint8_t xmax) const {
     return sum(ymax, xmax) - sum(ymin, xmax) - sum(ymax, xmin) + sum(ymin, xmin);
   }
-  void add(int _y, int _x, int v) {
-    for (int y=_y+1; y <= H; y+=y&(-y)) {
-      for (int x=_x+1; x <= W; x+=x&(-x)) {
+  void add(uint8_t _y, uint8_t _x, int v) {
+    for (uint8_t y=_y+1; y <= H; y+=y&(-y)) {
+      for (uint8_t x=_x+1; x <= W; x+=x&(-x)) {
         data[y][x] += v;
       }
     }
