@@ -26,25 +26,35 @@ inline double getTime() {  // TODO: Fix function name
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
+inline uint8_t bitUp(uint8_t x) {
+  return x - (x&(-x));
+}
+
 struct BIT {
   int H, W;
-  vector<vector<int> > data;
+  vector<vector<uint16_t> > data;
 
  public:
   BIT(int _H, int _W): H(_H), W(_W) {
-    data.assign(H+1, vector<int>(W+1, 0));
+    data.assign(H+1, vector<uint16_t>(W+1, 0));
   }
   // [0, y)-[0, x)
-  int sum(int _y, int _x) {
+  int sum(uint8_t _y, uint8_t _x) const {
+    const uint8_t x64 = _x;
+    const uint8_t x32 = bitUp(x64);
+    const uint8_t x16 = bitUp(x32);
+    const uint8_t x08 = bitUp(x16);
+    const uint8_t x04 = bitUp(x08);
+    const uint8_t x02 = bitUp(x04);
+    const uint8_t x01 = bitUp(x02);
     int res = 0;
     for (int y=_y; y > 0; y-=y&(-y)) {
-      for (int x=_x; x > 0; x-=x&(-x)) {
-        res += data[y][x];
-      }
+      const auto &d = data[y];
+      res += d[x64] + d[x32] + d[x16] + d[x08] + d[x04] + d[x02] + d[x01];
     }
     return res;
   }
-  int sum(int ymin, int xmin, int ymax, int xmax) {
+  int sum(uint8_t ymin, uint8_t xmin, uint8_t ymax, uint8_t xmax) const {
     return sum(ymax, xmax) - sum(ymin, xmax) - sum(ymax, xmin) + sum(ymin, xmin);
   }
   void add(int _y, int _x, int v) {
@@ -157,6 +167,7 @@ start:
     return H * W - res;
   }
 
+ public:
   struct Mask {
     vector<uint64_t> data;
     explicit Mask(int H) {
@@ -170,7 +181,6 @@ start:
     }
   };
 
- public:
   vector<string> removePairs(vector<string> board) {
     init(board);
     double best = H*W;
