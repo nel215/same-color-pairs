@@ -88,6 +88,58 @@ class XorShift {
 };
 XorShift rng(215);
 
+struct Cell {
+  int8_t color;
+  uint8_t ok;
+  Cell() {
+    color = -1;
+    ok = 0;
+  }
+  bool okU() const {
+    return (ok>>0) & 1;
+  }
+  bool okD() const {
+    return (ok>>1) & 1;
+  }
+  bool okL() const {
+    return (ok>>2) & 1;
+  }
+  bool okR() const {
+    return (ok>>3) & 1;
+  }
+};
+
+struct Board {
+  const uint8_t H;
+  const uint8_t W;
+  const uint8_t C;
+  const vector<string> &board;
+  vector<Cell> data;
+  explicit Board(const vector<string> &_board, const uint8_t _C):
+    H(_board.size()), W(_board[0].size()), C(_C), board(_board) {
+      data.assign((H+2)*(W+2), Cell());
+      for (int y=0; y < H; y++) {
+        for (int x=0; x < W; x++) {
+          _get(y, x).color = board[y][x] - '0';
+        }
+      }
+      for (int y=0; y < H; y++) {
+        for (int x=0; x < W; x++) {
+          _get(y, x).ok |= (get(y, x).color == get(y-1, x).color) << 0;
+          _get(y, x).ok |= (get(y, x).color == get(y+1, x).color) << 1;
+          _get(y, x).ok |= (get(y, x).color == get(y, x-1).color) << 2;
+          _get(y, x).ok |= (get(y, x).color == get(y, x+1).color) << 3;
+        }
+      }
+  }
+  Cell &_get(uint8_t y, uint8_t x) {
+    return data[(y+1)*(W+2)+(x+1)];
+  }
+  const Cell &get(uint8_t y, uint8_t x) const {
+    return data[(y+1)*(W+2)+(x+1)];
+  }
+};
+
 class SameColorPairs {
   double startTime;
   int H, W, C;
@@ -111,7 +163,8 @@ class SameColorPairs {
   // TODO: make positions to be const
   double solveDiag(vector<BIT> bit,
                    vector<vector<pair<int, int> > > positions,
-                   const vector<string> &board) {
+                   const vector<string> &board,
+                   const Board &myboard) {
     vector<int> colors(C);
     for (int c=0; c < C; c++) {
       colors[c] = c;
@@ -131,12 +184,16 @@ start:
           if (i >= pos.size()) break;
           int iy = pos[i].first;
           int ix = pos[i].second;
+          const auto &icell = myboard.get(iy, ix);
           // TODO: guardian
-          bool upok = (iy - 1 >= 0 && (mask.get(iy-1, ix) || board[iy-1][ix] == '0'+c));
-          bool downok = (iy + 1 < H && (mask.get(iy+1, ix) || board[iy+1][ix] == '0'+c));
-          bool leftok = (ix - 1 >= 0 && (mask.get(iy, ix-1) || board[iy][ix-1] == '0'+c));
-          bool rightok = (ix + 1 < W && (mask.get(iy, ix+1) || board[iy][ix+1] == '0'+c));
-
+          // bool upok = (iy - 1 >= 0 && (mask.get(iy-1, ix) || board[iy-1][ix] == '0'+c));
+          // bool downok = (iy + 1 < H && (mask.get(iy+1, ix) || board[iy+1][ix] == '0'+c));
+          // bool leftok = (ix - 1 >= 0 && (mask.get(iy, ix-1) || board[iy][ix-1] == '0'+c));
+          // bool rightok = (ix + 1 < W && (mask.get(iy, ix+1) || board[iy][ix+1] == '0'+c));
+          bool upok = mask.get(iy-1, ix) || icell.okU();
+          bool downok = mask.get(iy+1, ix) || icell.okD();
+          bool leftok = mask.get(iy, ix-1) || icell.okL();
+          bool rightok = mask.get(iy, ix+1) || icell.okR();
 
           for (int j=i+1; j < pos.size(); j++) {
             int jy = pos[j].first;
@@ -147,7 +204,6 @@ start:
             if ((!rightok && jx > ix) || (!leftok && jx < ix)) {
               continue;
             }
-
 
             int ymax = max(iy, jy)+1;
             int xmax = max(ix, jx)+1;
@@ -203,6 +259,7 @@ start:
 
   vector<string> removePairs(vector<string> board) {
     init(board);
+    Board myboard(board, C);
     double best = H*W;
     double avg = 0;
     // int n = 10;
@@ -219,7 +276,7 @@ start:
       }
     }
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, pos, board);
+      double tmp = solveDiag(bit, pos, board, myboard);
       // cerr << "s:" << tmp << endl;
       best = min(best, tmp);
       avg += tmp/n;
