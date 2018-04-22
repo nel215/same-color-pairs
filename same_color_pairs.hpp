@@ -107,6 +107,18 @@ struct Cell {
   bool okR() const {
     return (ok>>3) & 1;
   }
+  bool okUL() const {
+    return (ok>>4) & 1;
+  }
+  bool okUR() const {
+    return (ok>>5) & 1;
+  }
+  bool okDL() const {
+    return (ok>>6) & 1;
+  }
+  bool okDR() const {
+    return (ok>>7) & 1;
+  }
 };
 
 struct Board {
@@ -125,10 +137,15 @@ struct Board {
       }
       for (int y=0; y < H; y++) {
         for (int x=0; x < W; x++) {
-          _get(y, x).ok |= (get(y, x).color == get(y-1, x).color) << 0;
-          _get(y, x).ok |= (get(y, x).color == get(y+1, x).color) << 1;
-          _get(y, x).ok |= (get(y, x).color == get(y, x-1).color) << 2;
-          _get(y, x).ok |= (get(y, x).color == get(y, x+1).color) << 3;
+          const auto c = get(y, x).color;
+          _get(y, x).ok |= (c == get(y-1, x).color) << 0;
+          _get(y, x).ok |= (c == get(y+1, x).color) << 1;
+          _get(y, x).ok |= (c == get(y, x-1).color) << 2;
+          _get(y, x).ok |= (c == get(y, x+1).color) << 3;
+          _get(y, x).ok |= (c == get(y-1, x-1).color) << 4;
+          _get(y, x).ok |= (c == get(y-1, x+1).color) << 5;
+          _get(y, x).ok |= (c == get(y+1, x-1).color) << 6;
+          _get(y, x).ok |= (c == get(y+1, x+1).color) << 7;
         }
       }
   }
@@ -194,6 +211,10 @@ start:
           bool downok = mask.get(iy+1, ix) || icell.okD();
           bool leftok = mask.get(iy, ix-1) || icell.okL();
           bool rightok = mask.get(iy, ix+1) || icell.okR();
+          bool okUL = mask.get(iy-1, ix-1) || icell.okUL();
+          bool okUR = mask.get(iy-1, ix+1) || icell.okUR();
+          bool okDL = mask.get(iy+1, ix-1) || icell.okDL();
+          bool okDR = mask.get(iy+1, ix+1) || icell.okDR();
 
           for (int j=i+1; j < pos.size(); j++) {
             int jy = pos[j].first;
@@ -202,6 +223,18 @@ start:
               continue;
             }
             if ((!rightok && jx > ix) || (!leftok && jx < ix)) {
+              continue;
+            }
+            if (!okUL && jy < iy && jx < ix) {
+              continue;
+            }
+            if (!okUR && jy < iy && jx > ix) {
+              continue;
+            }
+            if (!okDL && jy > iy && jx < ix) {
+              continue;
+            }
+            if (!okDR && jy > iy && jx > ix) {
               continue;
             }
 
