@@ -101,16 +101,13 @@ class SameColorPairs {
     }
   }
 
-  double solveDiag(vector<BIT> bit, vector<string> board) {
-    vector<vector<pair<int, int> > > pos(C, vector<pair<int, int> >());
-    for (int y=0; y < H; y++) {
-      for (int x=0; x < W; x++) {
-        if (board[y][x] == '.') {
-          continue;
-        }
-        int c = board[y][x]-'0';
-        pos[c].push_back(make_pair(y, x));
-      }
+  double solveDiag(vector<BIT> bit,
+                   vector<vector<pair<int, int> > > pos,
+                   vector<string> board) {
+    vector<int> colors(C);
+    for (int c=0; c < C; c++) {
+      colors[c] = c;
+      random_shuffle(pos[c].begin(), pos[c].end());
     }
 
     double res = 0;
@@ -167,15 +164,17 @@ class SameColorPairs {
     int n = 1000000*10*10/H/W/C*10/H*10/W;
     cerr << n << endl;
     vector<BIT> bit(C+1, BIT(H, W));
+    vector<vector<pair<int, int> > > pos(C, vector<pair<int, int> >());
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
         int c = board[y][x]-'0';
+        pos[c].push_back(make_pair(y, x));
         bit[c].add(y, x, 1);
         bit[C].add(y, x, 1);
       }
     }
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, board);
+      double tmp = solveDiag(bit, pos, board);
       // cerr << "s:" << tmp << endl;
       best = min(best, tmp);
       avg += tmp/n;
