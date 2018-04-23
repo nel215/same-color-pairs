@@ -196,10 +196,12 @@ class SameColorPairs {
   }
 
   void solveDiag(vector<BIT> bit,
+                  Mask mask,
                    vector<vector<int> > &positions,
                    const Board &myboard,
                    int &deleted,
-                   vector<int> &history) {
+                   vector<int> &history,
+                   const int target) {
     deleted = 0;
     vector<int> colors(C);
     vector<int> numPos(C, 0);
@@ -209,8 +211,7 @@ class SameColorPairs {
       numPos[c] = positions[c].size();
     }
 
-    Mask mask(H);
-    while (true) {
+    while (deleted < target) {
       bool updated = false;
       random_shuffle(colors.begin(), colors.end());
       for (auto c : colors) {
@@ -303,23 +304,65 @@ start:
         bit[C].add(y, x, 1);
       }
     }
+
+    Mask mask(H);
+    int preDeleted = 0;
+    vector<int> preHistory(2*H*W);
+    if (C >= 4 && H*W > 50*50) {
+      int target = H*W-50*50;
+      solveDiag(bit, mask, pos, myboard, preDeleted, preHistory, target);
+    }
+    cerr << "preDeleted:" << preDeleted << endl;
+
+    vector<string> res;
+    for (int i=0; i < preDeleted/2; i++) {
+      int iy = preHistory[4*i+0];
+      int ix = preHistory[4*i+1];
+      int jy = preHistory[4*i+2];
+      int jx = preHistory[4*i+3];
+      mask.set(iy, ix);
+      mask.set(jy, jx);
+      board[iy][ix] = '.';
+      board[jy][jx] = '.';
+      bit[myboard.get(iy, ix).color].add(iy, ix, -1);
+      bit[myboard.get(iy, ix).color].add(jy, jx, -1);
+      bit[C].add(iy, ix, -1);
+      bit[C].add(jy, jx, -1);
+      stringstream ss;
+      ss << iy << " ";
+      ss << ix << " ";
+      ss << jy << " ";
+      ss << jx;
+      res.push_back(ss.str());
+    }
+
+    pos.assign(C, vector<int>());
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < W; x++) {
+        if (board[y][x] == '.') {
+          continue;
+        }
+        int c = board[y][x]-'0';
+        pos[c].push_back(y*128+x);
+      }
+    }
+
     int bestDeleted = 0;
     vector<int> bestHistory(2*H*W);
     vector<int> history(2*H*W);
     double tried = 0;
     while (!mustFinish()) {
       int deleted;
-      solveDiag(bit, pos, myboard, deleted, history);
+      solveDiag(bit, mask, pos, myboard, deleted, history, H*W);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
       }
-      avg += (H*W-deleted)*1.0;
+      avg += (H*W-deleted-preDeleted)*1.0;
       tried += 1.0;
     }
     avg /= tried;
-    cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
-    vector<string> res;
+    cerr << "best:" <<  (H*W-bestDeleted-preDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
     for (int i=0; i < bestDeleted/2; i++) {
       stringstream ss;
       ss << bestHistory[4*i+0] << " ";
