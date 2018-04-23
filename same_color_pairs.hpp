@@ -177,7 +177,7 @@ class SameColorPairs {
   }
 
   double solveDiag(vector<BIT> bit,
-                   vector<vector<pair<int, int> > > &positions,
+                   vector<vector<int> > &positions,
                    const Board &myboard) {
     vector<int> colors(C);
     vector<int> numPos(C, 0);
@@ -199,8 +199,8 @@ class SameColorPairs {
         for (int i=0;; i++) {
 start:
           if (i >= numPos[c]) break;
-          int iy = pos[i].first;
-          int ix = pos[i].second;
+          int iy = pos[i]>>7;
+          int ix = pos[i]&127;
           const auto &icell = myboard.get(iy, ix);
           bool okU = mask.get(iy-1, ix) || icell.okU();
           bool okD = mask.get(iy+1, ix) || icell.okD();
@@ -212,8 +212,8 @@ start:
           bool okDR = mask.get(iy+1, ix+1) || icell.okDR();
 
           for (int j=i+1; j < numPos[c]; j++) {
-            int jy = pos[j].first;
-            int jx = pos[j].second;
+            int jy = pos[j]>>7;
+            int jx = pos[j]&127;
             if ((!okD && jy > iy) || (!okU && jy < iy)) {
               continue;
             }
@@ -290,11 +290,11 @@ start:
     int n = 1000000*10*10/H/W/C*10/H*10/W;
     cerr << n << endl;
     vector<BIT> bit(C+1, BIT(H, W));
-    vector<vector<pair<int, int> > > pos(C, vector<pair<int, int> >());
+    vector<vector<int> > pos(C, vector<int>());
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
         int c = board[y][x]-'0';
-        pos[c].push_back(make_pair(y, x));
+        pos[c].push_back(y*128+x);
         bit[c].add(y, x, 1);
         bit[C].add(y, x, 1);
       }
