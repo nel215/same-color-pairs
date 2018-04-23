@@ -66,6 +66,23 @@ struct BIT {
   }
 };
 
+struct Mask {
+  vector<uint64_t> data;
+  explicit Mask(int H) {
+    data.assign(2*H+2, 0);
+  }
+  bool get(int y, int x) const {
+    y++;
+    x++;
+    return data[2*y+(x>>6)] & (1LL << (x&63));
+  }
+  void set(int y, int x) {
+    y++;
+    x++;
+    data[2*y+(x>>6)] |= (1LL << (x&63));
+  }
+};
+
 class XorShift {
   uint32_t x;
   uint32_t y;
@@ -268,23 +285,6 @@ start:
   }
 
  public:
-  struct Mask {
-    vector<uint64_t> data;
-    explicit Mask(int H) {
-      data.assign(2*H+2, 0);
-    }
-    bool get(int y, int x) const {
-      y++;
-      x++;
-      return data[2*y+(x>>6)] & (1LL << (x&63));
-    }
-    void set(int y, int x) {
-      y++;
-      x++;
-      data[2*y+(x>>6)] |= (1LL << (x&63));
-    }
-  };
-
   vector<string> removePairs(vector<string> board) {
     init(board);
     Board myboard(board, C);

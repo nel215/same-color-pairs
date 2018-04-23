@@ -17,7 +17,7 @@ void testBIT() {
 }
 
 void testMask() {
-  SameColorPairs::Mask mask(10);
+  Mask mask(10);
   for (int y=0; y < 10; y++) {
     for (int x=0; x < 100; x++) {
       assert(!mask.get(y, x));
