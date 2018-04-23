@@ -140,9 +140,9 @@ struct Cell {
 };
 
 struct Board {
-  const uint8_t H;
-  const uint8_t W;
-  const uint8_t C;
+  const int H;
+  const int W;
+  const int C;
   const vector<string> &board;
   vector<Cell> data;
   explicit Board(const vector<string> &_board, const uint8_t _C):
@@ -167,10 +167,10 @@ struct Board {
         }
       }
   }
-  Cell &_get(uint8_t y, uint8_t x) {
+  Cell &_get(int y, int x) {
     return data[(y+1)*(W+2)+(x+1)];
   }
-  const Cell &get(uint8_t y, uint8_t x) const {
+  const Cell &get(int y, int x) const {
     return data[(y+1)*(W+2)+(x+1)];
   }
 };
