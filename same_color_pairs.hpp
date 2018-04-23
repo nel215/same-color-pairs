@@ -176,9 +176,8 @@ class SameColorPairs {
     }
   }
 
-  // TODO: make positions to be const
   double solveDiag(vector<BIT> bit,
-                   vector<vector<pair<int, int> > > positions,
+                   vector<vector<pair<int, int> > > &positions,
                    const Board &myboard) {
     vector<int> colors(C);
     vector<int> numPos(C, 0);
