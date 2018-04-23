@@ -181,10 +181,13 @@ class SameColorPairs {
                    vector<vector<pair<int, int> > > positions,
                    const Board &myboard) {
     vector<int> colors(C);
+    vector<int> numPos(C, 0);
     for (int c=0; c < C; c++) {
       colors[c] = c;
       random_shuffle(positions[c].begin(), positions[c].end());
+      numPos[c] = positions[c].size();
     }
+
 
     double res = 0;
     Mask mask(H);
@@ -196,7 +199,7 @@ class SameColorPairs {
         // cerr << c << " " << num_pos << endl;
         for (int i=0;; i++) {
 start:
-          if (i >= pos.size()) break;
+          if (i >= numPos[c]) break;
           int iy = pos[i].first;
           int ix = pos[i].second;
           const auto &icell = myboard.get(iy, ix);
@@ -209,7 +212,7 @@ start:
           bool okDL = mask.get(iy+1, ix-1) || icell.okDL();
           bool okDR = mask.get(iy+1, ix+1) || icell.okDR();
 
-          for (int j=i+1; j < pos.size(); j++) {
+          for (int j=i+1; j < numPos[c]; j++) {
             int jy = pos[j].first;
             int jx = pos[j].second;
             if ((!okD && jy > iy) || (!okU && jy < iy)) {
@@ -238,10 +241,10 @@ start:
             if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
               mask.set(iy, ix);
               mask.set(jy, jx);
-              swap(pos[j], pos[pos.size()-1]);
-              pos.pop_back();
-              swap(pos[i], pos[pos.size()-1]);
-              pos.pop_back();
+              swap(pos[j], pos[numPos[c]-1]);
+              numPos[c]--;
+              swap(pos[i], pos[numPos[c]-1]);
+              numPos[c]--;
               bit[c].add(iy, ix, -1);
               bit[c].add(jy, jx, -1);
               bit[C].add(iy, ix, -1);
