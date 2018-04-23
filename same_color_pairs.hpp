@@ -17,8 +17,10 @@ using namespace std;
 
 #ifdef LOCAL
 const double ticks_per_sec = 3200000000;
+const double timeLimit = 6.0;
 #else
 const double ticks_per_sec = 3000000000;
+const double timeLimit = 8.9;
 #endif  // LOCAL
 inline double getTime() {
     uint32_t lo, hi;
@@ -178,7 +180,7 @@ class SameColorPairs {
   int H, W, C;
 
   inline bool mustFinish() {
-    return getTime() - startTime > 9.5;
+    return getTime() - startTime > timeLimit;
   }
 
   void init(const vector<string> &board) {
