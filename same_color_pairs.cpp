@@ -33,7 +33,9 @@ int main() {
   int H;
   cin >> H;
   vector<string> board(H);
-  getVector(board);
+  for (int i = 0; i < H; ++i) {
+    cin >> board[i];
+  }
 
   vector<string> ret = scp.removePairs(board);
   cout << ret.size() << endl;
