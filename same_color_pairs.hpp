@@ -176,9 +176,12 @@ class SameColorPairs {
     }
   }
 
-  double solveDiag(vector<BIT> bit,
+  void solveDiag(vector<BIT> bit,
                    vector<vector<int> > &positions,
-                   const Board &myboard) {
+                   const Board &myboard,
+                   int &deleted,
+                   vector<uint8_t> &history) {
+    deleted = 0;
     vector<int> colors(C);
     vector<int> numPos(C, 0);
     for (int c=0; c < C; c++) {
@@ -187,8 +190,6 @@ class SameColorPairs {
       numPos[c] = positions[c].size();
     }
 
-
-    double res = 0;
     Mask mask(H);
     while (true) {
       bool updated = false;
@@ -238,7 +239,13 @@ start:
             int ymin = min(iy, jy);
             int xmin = min(ix, jx);
             if (bit[c].sum(ymin, xmin, ymax, xmax) == bit[C].sum(ymin, xmin, ymax, xmax)) {
+              history[2*deleted+0] = iy;
+              history[2*deleted+1] = ix;
               mask.set(iy, ix);
+              deleted++;
+              history[2*deleted+0] = jy;
+              history[2*deleted+1] = jx;
+              deleted++;
               mask.set(jy, jx);
               swap(pos[j], pos[numPos[c]-1]);
               numPos[c]--;
@@ -248,7 +255,6 @@ start:
               bit[c].add(jy, jx, -1);
               bit[C].add(iy, ix, -1);
               bit[C].add(jy, jx, -1);
-              res += 2;
               updated = true;
               goto start;
             }
@@ -259,8 +265,6 @@ start:
         break;
       }
     }
-
-    return H * W - res;
   }
 
  public:
@@ -284,13 +288,12 @@ start:
   vector<string> removePairs(vector<string> board) {
     init(board);
     Board myboard(board, C);
-    double best = H*W;
     double avg = 0;
-    // int n = 10;
-    int n = 1000000*10*10/H/W/C*10/H*10/W;
+    int n = 4000000*10*10/H/W/C*10/H*10/W;
     cerr << n << endl;
     vector<BIT> bit(C+1, BIT(H, W));
     vector<vector<int> > pos(C, vector<int>());
+
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
         int c = board[y][x]-'0';
@@ -299,14 +302,19 @@ start:
         bit[C].add(y, x, 1);
       }
     }
+    int bestDeleted = 0;
+    vector<uint8_t> bestHistory(2*H*W);
+    vector<uint8_t> history(2*H*W);
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, pos, myboard);
-      // cerr << "s:" << tmp << endl;
-      best = min(best, tmp);
-      avg += tmp/n;
+      int deleted;
+      solveDiag(bit, pos, myboard, deleted, history);
+      if (deleted > bestDeleted) {
+        bestDeleted = deleted;
+        bestHistory = history;
+      }
+      avg += (H*W-deleted)*1.0/n;
     }
-    cerr << "best: " <<  best << " avg: " << avg << endl;
-    // cerr << H << " " << W << " " << C << endl;
+    cerr << "best: " <<  (H*W-bestDeleted) << " avg: " << avg << endl;
     vector<string> res;
     return res;
   }
