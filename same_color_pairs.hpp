@@ -289,8 +289,7 @@ start:
     init(board);
     Board myboard(board, C);
     double avg = 0;
-    int n = 400000*10*10/H/W/C*10/H*10/W;
-    cerr << "H:" << H << "\tW:" << W << "\tC:" << C << "\tn:" << n << endl;
+    cerr << "H:" << H << "\tW:" << W << "\tC:" << C << endl;
     vector<BIT> bit(C+1, BIT(H, W));
     vector<vector<int> > pos(C, vector<int>());
 
@@ -305,16 +304,19 @@ start:
     int bestDeleted = 0;
     vector<int> bestHistory(2*H*W);
     vector<int> history(2*H*W);
-    for (int i=0; i < n; i++) {
+    double tried = 0;
+    while (!mustFinish()) {
       int deleted;
       solveDiag(bit, pos, myboard, deleted, history);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
       }
-      avg += (H*W-deleted)*1.0/n;
+      avg += (H*W-deleted)*1.0;
+      tried += 1.0;
     }
-    cerr << "best: " <<  (H*W-bestDeleted) << " avg: " << avg << endl;
+    avg /= tried;
+    cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
     vector<string> res;
     for (int i=0; i < bestDeleted/2; i++) {
       stringstream ss;
