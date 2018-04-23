@@ -20,13 +20,12 @@ const double ticks_per_sec = 3200000000;
 #else
 const double ticks_per_sec = 3000000000;
 #endif  // LOCAL
-inline double getTime() {  // TODO: Fix function name
+inline double getTime() {
     uint32_t lo, hi;
     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
     return (((uint64_t)hi << 32) | lo) / ticks_per_sec;
 }
 
-// TODO: precalculate
 inline uint8_t bitUp(uint8_t x) {
   return x - (x&(-x));
 }
@@ -180,7 +179,6 @@ class SameColorPairs {
   // TODO: make positions to be const
   double solveDiag(vector<BIT> bit,
                    vector<vector<pair<int, int> > > positions,
-                   const vector<string> &board,
                    const Board &myboard) {
     vector<int> colors(C);
     for (int c=0; c < C; c++) {
@@ -202,15 +200,10 @@ start:
           int iy = pos[i].first;
           int ix = pos[i].second;
           const auto &icell = myboard.get(iy, ix);
-          // TODO: guardian
-          // bool upok = (iy - 1 >= 0 && (mask.get(iy-1, ix) || board[iy-1][ix] == '0'+c));
-          // bool downok = (iy + 1 < H && (mask.get(iy+1, ix) || board[iy+1][ix] == '0'+c));
-          // bool leftok = (ix - 1 >= 0 && (mask.get(iy, ix-1) || board[iy][ix-1] == '0'+c));
-          // bool rightok = (ix + 1 < W && (mask.get(iy, ix+1) || board[iy][ix+1] == '0'+c));
-          bool upok = mask.get(iy-1, ix) || icell.okU();
-          bool downok = mask.get(iy+1, ix) || icell.okD();
-          bool leftok = mask.get(iy, ix-1) || icell.okL();
-          bool rightok = mask.get(iy, ix+1) || icell.okR();
+          bool okU = mask.get(iy-1, ix) || icell.okU();
+          bool okD = mask.get(iy+1, ix) || icell.okD();
+          bool okL = mask.get(iy, ix-1) || icell.okL();
+          bool okR = mask.get(iy, ix+1) || icell.okR();
           bool okUL = mask.get(iy-1, ix-1) || icell.okUL();
           bool okUR = mask.get(iy-1, ix+1) || icell.okUR();
           bool okDL = mask.get(iy+1, ix-1) || icell.okDL();
@@ -219,10 +212,10 @@ start:
           for (int j=i+1; j < pos.size(); j++) {
             int jy = pos[j].first;
             int jx = pos[j].second;
-            if ((!downok && jy > iy) || (!upok && jy < iy)) {
+            if ((!okD && jy > iy) || (!okU && jy < iy)) {
               continue;
             }
-            if ((!rightok && jx > ix) || (!leftok && jx < ix)) {
+            if ((!okR && jx > ix) || (!okL && jx < ix)) {
               continue;
             }
             if (!okUL && jy < iy && jx < ix) {
@@ -261,10 +254,6 @@ start:
         }
       }
       if (!updated) {
-        // for (int y=0; y < H; y++) {
-        //   cerr << board[y] << endl;
-        // }
-        // cerr << endl;
         break;
       }
     }
@@ -309,7 +298,7 @@ start:
       }
     }
     for (int i=0; i < n; i++) {
-      double tmp = solveDiag(bit, pos, board, myboard);
+      double tmp = solveDiag(bit, pos, myboard);
       // cerr << "s:" << tmp << endl;
       best = min(best, tmp);
       avg += tmp/n;
