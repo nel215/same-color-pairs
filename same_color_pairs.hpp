@@ -71,7 +71,7 @@ struct BIT {
 struct Mask {
   vector<uint64_t> data;
   explicit Mask(int H) {
-    data.assign(2*H+2, 0);
+    data.assign(2*H+4, 0);
   }
   bool get(int y, int x) const {
     y++;
