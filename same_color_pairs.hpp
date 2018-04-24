@@ -202,20 +202,15 @@ class SameColorPairs {
                    int &deleted,
                    vector<int> &history) {
     deleted = 0;
-    vector<int> colors(C);
     vector<int> numPos(C, 0);
     for (int c=0; c < C; c++) {
-      colors[c] = c;
-      random_shuffle(positions[c].begin(), positions[c].end());
       numPos[c] = positions[c].size();
     }
 
     while (1) {
       bool updated = false;
-      random_shuffle(colors.begin(), colors.end());
-      for (auto c : colors) {
+      for (int c=0; c < C; c++) {
         auto &pos = positions[c];
-        // cerr << c << " " << num_pos << endl;
         for (int i=0;; i++) {
 start:
           if (i >= numPos[c]) break;
