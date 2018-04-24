@@ -199,6 +199,7 @@ class SameColorPairs {
                   Mask mask,
                    vector<vector<int> > &positions,
                    const Board &myboard,
+                   const vector<uint8_t> &colors,
                    int &deleted,
                    vector<int> &history) {
     deleted = 0;
@@ -209,7 +210,7 @@ class SameColorPairs {
 
     while (1) {
       bool updated = false;
-      for (int c=0; c < C; c++) {
+      for (auto c : colors) {
         auto &pos = positions[c];
         for (int i=0;; i++) {
 start:
@@ -287,10 +288,14 @@ start:
     Board myboard(board, C);
     double avg = 0;
     cerr << "H:" << H << "\tW:" << W << "\tC:" << C << endl;
+    vector<uint8_t> colors(C);
     vector<BIT> bit(C+1, BIT(H, W));
     vector<vector<int> > pos(C, vector<int>());
     Mask mask(H);
 
+    for (int c=0; c < C; c++) {
+      colors[c] = c;
+    }
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
         int c = board[y][x]-'0';
@@ -305,16 +310,22 @@ start:
     int bestDeleted = 0;
     vector<int> bestHistory;
     vector<int> history(4*H*W);
-    double tried = 0;
+    int tried = 0;
     while (!mustFinish()) {
+      if ((tried & 127) == 0) {
+        random_shuffle(colors.begin(), colors.end());
+        for (int c=0; c < C; c++) {
+          random_shuffle(pos[c].begin(), pos[c].end());
+        }
+      }
       int deleted;
-      solveDiag(bit, mask, pos, myboard, deleted, history);
+      solveDiag(bit, mask, pos, myboard, colors, deleted, history);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
       }
       avg += (H*W-deleted)*1.0;
-      tried += 1.0;
+      tried += 1;
     }
     avg /= tried;
     cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
