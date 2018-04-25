@@ -75,7 +75,6 @@ struct BIT {
   }
 };
 
-
 struct Mask {
   vector<uint64_t> data;
   explicit Mask(int H) {
@@ -90,6 +89,11 @@ struct Mask {
     y++;
     x++;
     data[2*y+(x>>6)] |= (1LL << (x&63));
+  }
+  void reset() {
+    for (int i=0; i < data.size(); i++) {
+      data[i] = 0;
+    }
   }
 };
 
@@ -230,18 +234,19 @@ class SameColorPairs {
     bit = srcBIT;
   }
 
-  void solveDiag(Mask mask,
+  void solveDiag(Mask &mask,
                  vector<vector<int> > &positions,
                  const vector<uint8_t> &colors,
                  int &deleted,
                  vector<int> &history) {
     deleted = 0;
-    vector<int> numPos(C, 0);
+    int numPos[6];
     for (int c=0; c < C; c++) {
       srcBIT[c].copy(bit[c]);
       numPos[c] = positions[c].size();
     }
     srcBIT[C].copy(bit[C]);
+    mask.reset();
 
     while (1) {
       bool updated = false;
