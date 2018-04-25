@@ -290,7 +290,7 @@ start:
     cerr << "H:" << H << "\tW:" << W << "\tC:" << C << endl;
     vector<uint8_t> colors(C);
     vector<BIT> bit(C+1, BIT(H, W));
-    vector<vector<int> > pos(C, vector<int>());
+    vector<vector<int> > positions(C, vector<int>());
     Mask mask(H);
 
     for (int c=0; c < C; c++) {
@@ -299,7 +299,7 @@ start:
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
         int c = board[y][x]-'0';
-        pos[c].push_back(y*128+x);
+        positions[c].push_back(y*128+x);
         bit[c].add(y, x, 1);
         bit[C].add(y, x, 1);
       }
@@ -312,20 +312,18 @@ start:
     vector<int> history(4*H*W);
     int tried = 0;
     while (!mustFinish()) {
-      if ((tried & 127) == 0) {
+      if ((tried & 255) == 0) {
         random_shuffle(colors.begin(), colors.end());
-        for (int c=0; c < C; c++) {
-          random_shuffle(pos[c].begin(), pos[c].end());
-        }
       }
       int deleted;
-      solveDiag(bit, mask, pos, myboard, colors, deleted, history);
+      solveDiag(bit, mask, positions, myboard, colors, deleted, history);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
       }
       avg += (H*W-deleted)*1.0;
       tried += 1;
+      if (bestDeleted == H*W) break;
     }
     avg /= tried;
     cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
