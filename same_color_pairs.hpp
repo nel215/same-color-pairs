@@ -176,29 +176,43 @@ struct Board {
 };
 
 class SameColorPairs {
+  unique_ptr<Board> board;
   double startTime;
   int H, W, C;
+  bool swapped;
 
   inline bool mustFinish() {
     return getTime() - startTime > timeLimit;
   }
 
-  void init(const vector<string> &board) {
+  void init(const vector<string> &_board) {
     startTime = getTime();
-    H = board.size();
-    W = board[0].size();
+    swapped = false;
+    H = _board.size();
+    W = _board[0].size();
+    if (W < H) {
+      swapped = true;
+      swap(H, W);
+    }
+
     C = 0;
-    for (int y=0; y < H; y++) {
-      for (int x=0; x < W; x++) {
-        C = max(C, board[y][x]-'0'+1);
+    vector<string> tmp(H, string(W, ' '));
+    for (int y=0; y < _board.size(); y++) {
+      for (int x=0; x < _board[y].size(); x++) {
+        C = max(C, _board[y][x]-'0'+1);
+        if (swapped) {
+          tmp[x][y] = _board[y][x];
+        } else {
+          tmp[y][x] = _board[y][x];
+        }
       }
     }
+    board = unique_ptr<Board>(new Board(tmp, C));
   }
 
   void solveDiag(vector<BIT> bit,
                   Mask mask,
                    vector<vector<int> > &positions,
-                   const Board &myboard,
                    const vector<uint8_t> &colors,
                    int &deleted,
                    vector<int> &history) {
@@ -217,7 +231,7 @@ start:
           if (i >= numPos[c]) break;
           int iy = pos[i]>>7;
           int ix = pos[i]&127;
-          const auto &icell = myboard.get(iy, ix);
+          const auto &icell = board->get(iy, ix);
           bool okU = mask.get(iy-1, ix) || icell.okU();
           bool okD = mask.get(iy+1, ix) || icell.okD();
           bool okL = mask.get(iy, ix-1) || icell.okL();
@@ -283,11 +297,10 @@ start:
   }
 
  public:
-  vector<string> removePairs(vector<string> board) {
-    init(board);
-    Board myboard(board, C);
+  vector<string> removePairs(vector<string> _board) {
+    init(_board);
     double avg = 0;
-    cerr << "H:" << H << "\tW:" << W << "\tC:" << C << endl;
+    cerr << "H:" << H << "\tW:" << W << "\tC:" << C << "\tswapped:" << swapped << endl;
     vector<uint8_t> colors(C);
     vector<BIT> bit(C+1, BIT(H, W));
     vector<vector<int> > positions(C, vector<int>());
@@ -298,7 +311,7 @@ start:
     }
     for (int y=0; y < H; y++) {
       for (int x=0; x < W; x++) {
-        int c = board[y][x]-'0';
+        int c = board->get(y, x).color;
         positions[c].push_back(y*128+x);
         bit[c].add(y, x, 1);
         bit[C].add(y, x, 1);
@@ -315,7 +328,7 @@ start:
         random_shuffle(colors.begin(), colors.end());
       }
       int deleted;
-      solveDiag(bit, mask, positions, myboard, colors, deleted, history);
+      solveDiag(bit, mask, positions, colors, deleted, history);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
@@ -331,6 +344,10 @@ start:
     char buf[32];
     for (int i=0; i < bestDeleted/2; i++) {
       int idx = 0;
+      if (swapped) {
+        swap(bestHistory[4*i+0], bestHistory[4*i+1]);
+        swap(bestHistory[4*i+2], bestHistory[4*i+3]);
+      }
       for (int j=0; j < 4; j++) {
         const int h = bestHistory[4*i+j];
         if (h >= 10) buf[idx++] = '0' + h/10;
