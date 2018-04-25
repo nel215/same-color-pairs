@@ -97,27 +97,6 @@ struct Mask {
   }
 };
 
-class XorShift {
-  uint32_t x;
-  uint32_t y;
-  uint32_t z;
-  uint32_t w;
- public:
-  explicit XorShift(int seed) {
-    std::srand(seed);
-    x = std::rand();
-    y = std::rand();
-    z = std::rand();
-    w = std::rand();
-  }
-  uint32_t rand() {
-    uint32_t t = x ^ (x << 11);
-    x = y; y = z; z = w;
-    return w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
-  }
-};
-XorShift rng(215);
-
 struct Cell {
   int8_t color;
   uint8_t ok;
@@ -155,14 +134,13 @@ struct Board {
   const int H;
   const int W;
   const int C;
-  const vector<string> &board;
   vector<Cell> data;
   explicit Board(const vector<string> &_board, const uint8_t _C):
-    H(_board.size()), W(_board[0].size()), C(_C), board(_board) {
+    H(_board.size()), W(_board[0].size()), C(_C) {
       data.assign((H+2)*(W+2), Cell());
       for (int y=0; y < H; y++) {
         for (int x=0; x < W; x++) {
-          _get(y, x).color = board[y][x] - '0';
+          _get(y, x).color = _board[y][x] - '0';
         }
       }
       for (int y=0; y < H; y++) {
