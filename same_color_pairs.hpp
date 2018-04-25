@@ -305,7 +305,6 @@ start:
       }
     }
 
-    vector<string> res;
 
     int bestDeleted = 0;
     vector<int> bestHistory;
@@ -327,13 +326,18 @@ start:
     }
     avg /= tried;
     cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
+
+    vector<string> res(bestDeleted/2);
+    char buf[32];
     for (int i=0; i < bestDeleted/2; i++) {
-      stringstream ss;
-      ss << bestHistory[4*i+0] << " ";
-      ss << bestHistory[4*i+1] << " ";
-      ss << bestHistory[4*i+2] << " ";
-      ss << bestHistory[4*i+3];
-      res.push_back(ss.str());
+      int idx = 0;
+      for (int j=0; j < 4; j++) {
+        const int h = bestHistory[4*i+j];
+        if (h >= 10) buf[idx++] = '0' + h/10;
+        buf[idx++] = '0' + h%10;
+        buf[idx++] = ' ';
+      }
+      res[i] = string(buf, buf+idx-1);
     }
     return res;
   }
