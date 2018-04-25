@@ -66,7 +66,15 @@ struct BIT {
       }
     }
   }
+  void copy(BIT &dst) const {
+    for (int y=0; y < H+1; y++) {
+      for (int x=0; x < W+1; x++) {
+        dst.data[y][x] = data[y][x];
+      }
+    }
+  }
 };
+
 
 struct Mask {
   vector<uint64_t> data;
@@ -180,6 +188,8 @@ class SameColorPairs {
   double startTime;
   int H, W, C;
   bool swapped;
+  vector<BIT> srcBIT;
+  vector<BIT> bit;
 
   inline bool mustFinish() {
     return getTime() - startTime > timeLimit;
@@ -208,19 +218,30 @@ class SameColorPairs {
       }
     }
     board = unique_ptr<Board>(new Board(tmp, C));
+    // construct BIT
+    srcBIT.assign(C+1, BIT(H, W));
+    for (int y=0; y < H; y++) {
+      for (int x=0; x < W; x++) {
+        int c = board->get(y, x).color;
+        srcBIT[c].add(y, x, 1);
+        srcBIT[C].add(y, x, 1);
+      }
+    }
+    bit = srcBIT;
   }
 
-  void solveDiag(vector<BIT> bit,
-                  Mask mask,
-                   vector<vector<int> > &positions,
-                   const vector<uint8_t> &colors,
-                   int &deleted,
-                   vector<int> &history) {
+  void solveDiag(Mask mask,
+                 vector<vector<int> > &positions,
+                 const vector<uint8_t> &colors,
+                 int &deleted,
+                 vector<int> &history) {
     deleted = 0;
     vector<int> numPos(C, 0);
     for (int c=0; c < C; c++) {
+      srcBIT[c].copy(bit[c]);
       numPos[c] = positions[c].size();
     }
+    srcBIT[C].copy(bit[C]);
 
     while (1) {
       bool updated = false;
@@ -302,7 +323,6 @@ start:
     double avg = 0;
     cerr << "H:" << H << "\tW:" << W << "\tC:" << C << "\tswapped:" << swapped << endl;
     vector<uint8_t> colors(C);
-    vector<BIT> bit(C+1, BIT(H, W));
     vector<vector<int> > positions(C, vector<int>());
     Mask mask(H);
 
@@ -313,11 +333,8 @@ start:
       for (int x=0; x < W; x++) {
         int c = board->get(y, x).color;
         positions[c].push_back(y*128+x);
-        bit[c].add(y, x, 1);
-        bit[C].add(y, x, 1);
       }
     }
-
 
     int bestDeleted = 0;
     vector<int> bestHistory;
@@ -328,7 +345,7 @@ start:
         random_shuffle(colors.begin(), colors.end());
       }
       int deleted;
-      solveDiag(bit, mask, positions, colors, deleted, history);
+      solveDiag(mask, positions, colors, deleted, history);
       if (deleted > bestDeleted) {
         bestDeleted = deleted;
         bestHistory = history;
