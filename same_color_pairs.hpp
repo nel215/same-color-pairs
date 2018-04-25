@@ -303,8 +303,7 @@ start:
  public:
   vector<string> removePairs(vector<string> _board) {
     init(_board);
-    double avg = 0;
-    cerr << "H:" << H << "\tW:" << W << "\tC:" << C << "\tswapped:" << swapped << endl;
+    // cerr << "H:" << H << "\tW:" << W << "\tC:" << C << "\tswapped:" << swapped << endl;
     vector<uint8_t> colors(C);
     vector<vector<int> > positions(C, vector<int>());
     Mask mask(H);
@@ -319,10 +318,10 @@ start:
       }
     }
 
+    int tried = 0;
     int bestDeleted = 0;
     vector<int> bestHistory;
     vector<int> history(4*H*W);
-    int tried = 0;
     while (!mustFinish()) {
       if ((tried & 255) == 0) {
         random_shuffle(colors.begin(), colors.end());
@@ -333,12 +332,10 @@ start:
         bestDeleted = deleted;
         bestHistory = history;
       }
-      avg += (H*W-deleted)*1.0;
-      tried += 1;
+      tried++;
       if (bestDeleted == H*W) break;
     }
-    avg /= tried;
-    cerr << "best:" <<  (H*W-bestDeleted) << "\tavg:" << avg << "\ttried:" << tried << endl;
+    // cerr << "best:" <<  (H*W-bestDeleted) << "\ttried:" << tried << endl;
 
     vector<string> res(bestDeleted/2);
     char buf[32];
